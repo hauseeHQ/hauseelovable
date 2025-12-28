@@ -1,0 +1,703 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Printer } from 'lucide-react';
+import {
+  BudgetPlannerData,
+  BudgetCategory,
+  BudgetLineItem,
+  BudgetCalculations,
+  CategoryTotals
+} from '../../types';
+import { saveBudgetPlanner, loadBudgetPlanner } from '../../lib/supabaseClient';
+
+const TEMP_USER_ID = 'temp-user-demo';
+
+const createEmptyLineItem = (): BudgetLineItem => ({ current: 0, expected: 0 });
+
+const INITIAL_STATE: BudgetPlannerData = {
+  budget: {
+    income: {
+      netIncome: createEmptyLineItem(),
+      partnerNetIncome: createEmptyLineItem(),
+      otherIncome: createEmptyLineItem(),
+    },
+    debt: {
+      creditCards: createEmptyLineItem(),
+      linesOfCredit: createEmptyLineItem(),
+      studentLoans: createEmptyLineItem(),
+      personalLoan: createEmptyLineItem(),
+      autoLoanLease: createEmptyLineItem(),
+      otherLoans: createEmptyLineItem(),
+    },
+    transportation: {
+      autoInsurance: createEmptyLineItem(),
+      repairsMaintenance: createEmptyLineItem(),
+      fuel: createEmptyLineItem(),
+      parking: createEmptyLineItem(),
+      publicTransit: createEmptyLineItem(),
+    },
+    housing: {
+      rentMortgage: createEmptyLineItem(),
+      propertyTaxes: createEmptyLineItem(),
+      insurance: createEmptyLineItem(),
+      condoPoaFees: createEmptyLineItem(),
+      maintenance: createEmptyLineItem(),
+      groceries: createEmptyLineItem(),
+      laundry: createEmptyLineItem(),
+    },
+    health: {
+      medication: createEmptyLineItem(),
+      glassesContacts: createEmptyLineItem(),
+      dental: createEmptyLineItem(),
+      therapist: createEmptyLineItem(),
+      specialNeedsItems: createEmptyLineItem(),
+    },
+  },
+  calculations: {
+    currentMonthlySavings: 0,
+    expectedMonthlySavings: 0,
+    delta: 0,
+    categoryTotals: {
+      income: { current: 0, expected: 0 },
+      debt: { current: 0, expected: 0 },
+      transportation: { current: 0, expected: 0 },
+      housing: { current: 0, expected: 0 },
+      health: { current: 0, expected: 0 },
+    },
+  },
+  updatedAt: new Date().toISOString(),
+};
+
+export default function BudgetPlannerForm() {
+  const userId = TEMP_USER_ID;
+  const [budget, setBudget] = useState<BudgetPlannerData>(INITIAL_STATE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const localData = localStorage.getItem(`hausee_budget_${userId}`);
+      const { data: dbData } = await loadBudgetPlanner(userId);
+
+      if (dbData) {
+        setBudget(dbData);
+      } else if (localData) {
+        const parsed = JSON.parse(localData);
+        setBudget(parsed);
+      }
+    } catch (err) {
+      console.error('Error loading budget:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const calculateCategoryTotal = (category: Record<string, BudgetLineItem>): CategoryTotals => {
+    let current = 0;
+    let expected = 0;
+
+    Object.values(category).forEach((item) => {
+      current += item.current;
+      expected += item.expected;
+    });
+
+    return { current, expected };
+  };
+
+  const calculateBudget = (budgetData: BudgetCategory): BudgetCalculations => {
+    const incomeTotals = calculateCategoryTotal(budgetData.income);
+    const debtTotals = calculateCategoryTotal(budgetData.debt);
+    const transportationTotals = calculateCategoryTotal(budgetData.transportation);
+    const housingTotals = calculateCategoryTotal(budgetData.housing);
+    const healthTotals = calculateCategoryTotal(budgetData.health);
+
+    const currentMonthlySavings =
+      incomeTotals.current -
+      (debtTotals.current + transportationTotals.current + housingTotals.current + healthTotals.current);
+
+    const expectedMonthlySavings =
+      incomeTotals.expected -
+      (debtTotals.expected + transportationTotals.expected + housingTotals.expected + healthTotals.expected);
+
+    const delta = expectedMonthlySavings - currentMonthlySavings;
+
+    return {
+      currentMonthlySavings,
+      expectedMonthlySavings,
+      delta,
+      categoryTotals: {
+        income: incomeTotals,
+        debt: debtTotals,
+        transportation: transportationTotals,
+        housing: housingTotals,
+        health: healthTotals,
+      },
+    };
+  };
+
+  const debouncedSave = useCallback(
+    (data: BudgetPlannerData) => {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+
+      const timeout = setTimeout(async () => {
+        const updatedData = { ...data, updatedAt: new Date().toISOString() };
+
+        localStorage.setItem(`hausee_budget_${userId}`, JSON.stringify(updatedData));
+
+        const result = await saveBudgetPlanner(userId, updatedData);
+
+        if (!result.success) {
+          console.error('Failed to save budget');
+        }
+      }, 1000);
+
+      setSaveTimeout(timeout);
+    },
+    [saveTimeout, userId]
+  );
+
+  const handleValueChange = (
+    category: keyof BudgetCategory,
+    field: string,
+    type: 'current' | 'expected',
+    value: string
+  ) => {
+    const numValue = parseFloat(value) || 0;
+    const newBudget = { ...budget.budget };
+    const categoryData = newBudget[category] as Record<string, BudgetLineItem>;
+
+    categoryData[field] = {
+      ...categoryData[field],
+      [type]: numValue,
+    };
+
+    const newCalculations = calculateBudget(newBudget);
+
+    const updatedBudget: BudgetPlannerData = {
+      budget: newBudget,
+      calculations: newCalculations,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setBudget(updatedBudget);
+    debouncedSave(updatedBudget);
+  };
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-500">Loading budget planner...</div>
+      </div>
+    );
+  }
+
+  const { calculations } = budget;
+  const hasData = budget.currentBudget.monthlyIncome > 0;
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Budget Planner
+            </h1>
+            <p className="text-gray-600">
+              Compare your current budget with expected homeownership costs
+            </p>
+          </div>
+          <button
+            onClick={handlePrint}
+            className="no-print p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Print budget"
+          >
+            <Printer className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {!hasData && (
+        <div className="no-print bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+            Getting Started
+          </h3>
+          <p className="text-blue-800 text-sm mb-3">
+            This budget planner helps you understand the financial transition from renting to
+            homeownership. Start by filling in your current monthly budget, then add your expected
+            homeownership costs to see the difference.
+          </p>
+          <p className="text-blue-700 text-sm">
+            <strong>Tip:</strong> Be realistic with your estimates. It's better to overestimate
+            expenses than to be surprised later.
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <CurrentBudgetColumn
+          budget={budget.currentBudget}
+          onChange={handleCurrentBudgetChange}
+          currentSavings={calculations.currentMonthlySavings}
+          formatCurrency={formatCurrency}
+        />
+
+        <HomeownerBudgetColumn
+          currentIncome={budget.currentBudget.monthlyIncome}
+          budget={budget.homeownerBudget}
+          onChange={handleHomeownerBudgetChange}
+          expectedSavings={calculations.expectedMonthlySavings}
+          carriedOverExpenses={calculations.carriedOverExpenses}
+          formatCurrency={formatCurrency}
+        />
+      </div>
+
+      {hasData && (
+        <BudgetSummary
+          calculations={calculations}
+          formatCurrency={formatCurrency}
+        />
+      )}
+    </div>
+  );
+}
+
+interface CurrentBudgetColumnProps {
+  budget: CurrentBudget;
+  onChange: (field: keyof CurrentBudget, value: string) => void;
+  currentSavings: number;
+  formatCurrency: (value: number) => string;
+}
+
+function CurrentBudgetColumn({
+  budget,
+  onChange,
+  currentSavings,
+  formatCurrency,
+}: CurrentBudgetColumnProps) {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Current Monthly Budget</h2>
+
+      <div className="space-y-4">
+        <BudgetInput
+          label="Monthly Income (After Tax)"
+          value={budget.monthlyIncome}
+          onChange={(v) => onChange('monthlyIncome', v)}
+          helperText="Your take-home pay after deductions"
+          required
+        />
+
+        <BudgetInput
+          label="Debt Payments"
+          value={budget.debtPayments}
+          onChange={(v) => onChange('debtPayments', v)}
+          helperText="Credit cards, loans, car payments"
+        />
+
+        <BudgetInput
+          label="Housing Expenses"
+          value={budget.housingExpenses}
+          onChange={(v) => onChange('housingExpenses', v)}
+          helperText="Current rent or mortgage payment"
+        />
+
+        <BudgetInput
+          label="Subscriptions"
+          value={budget.subscriptions}
+          onChange={(v) => onChange('subscriptions', v)}
+          helperText="Streaming, gym, apps, memberships"
+        />
+
+        <BudgetInput
+          label="Transportation"
+          value={budget.transportation}
+          onChange={(v) => onChange('transportation', v)}
+          helperText="Gas, transit, parking, insurance"
+        />
+
+        <BudgetInput
+          label="Groceries"
+          value={budget.groceries}
+          onChange={(v) => onChange('groceries', v)}
+          helperText="Weekly food shopping"
+        />
+
+        <BudgetInput
+          label="Variable Spending"
+          value={budget.variableSpending}
+          onChange={(v) => onChange('variableSpending', v)}
+          helperText="Dining out, entertainment, shopping"
+        />
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700">Current Monthly Savings:</span>
+          <span
+            className={`text-xl font-bold ${
+              currentSavings >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {formatCurrency(currentSavings)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface HomeownerBudgetColumnProps {
+  currentIncome: number;
+  budget: HomeownerBudget;
+  onChange: (field: keyof HomeownerBudget, value: string | boolean) => void;
+  expectedSavings: number;
+  carriedOverExpenses: number;
+  formatCurrency: (value: number) => string;
+}
+
+function HomeownerBudgetColumn({
+  currentIncome,
+  budget,
+  onChange,
+  expectedSavings,
+  carriedOverExpenses,
+  formatCurrency,
+}: HomeownerBudgetColumnProps) {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Expected Homeowner Budget</h2>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Monthly Income (After Tax)
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+            <input
+              type="text"
+              value={formatCurrency(currentIncome).replace('$', '').replace(/,/g, '')}
+              disabled
+              className="w-full h-12 pl-8 pr-4 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+            />
+          </div>
+          <p className="mt-1 text-xs text-gray-500">Auto-filled from current budget</p>
+        </div>
+
+        <BudgetInput
+          label="Mortgage Payment"
+          value={budget.mortgagePayment}
+          onChange={(v) => onChange('mortgagePayment', v)}
+          helperText="Principal + interest monthly payment"
+          link={{ text: 'Calculate', href: '#' }}
+        />
+
+        <BudgetInput
+          label="Property Taxes"
+          value={budget.propertyTaxes}
+          onChange={(v) => onChange('propertyTaxes', v)}
+          helperText="Annual property tax ÷ 12"
+        />
+
+        <BudgetInput
+          label="Home Insurance"
+          value={budget.homeInsurance}
+          onChange={(v) => onChange('homeInsurance', v)}
+          helperText="Average: $100-200/month in Ontario"
+        />
+
+        <BudgetInput
+          label="Utilities"
+          value={budget.utilities}
+          onChange={(v) => onChange('utilities', v)}
+          helperText="Electricity, gas, water (typical: $200-400/month)"
+        />
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-sm font-medium text-gray-700">Condo Fees</label>
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={!budget.condoFeesApplicable}
+                onChange={(e) => onChange('condoFeesApplicable', !e.target.checked)}
+                className="rounded border-gray-300 text-primary-400 focus:ring-primary-400"
+              />
+              Not applicable
+            </label>
+          </div>
+          <BudgetInput
+            label=""
+            value={budget.condoFees}
+            onChange={(v) => onChange('condoFees', v)}
+            helperText="Monthly condo/strata fees if applicable"
+            disabled={!budget.condoFeesApplicable}
+          />
+        </div>
+
+        <BudgetInput
+          label="Maintenance Reserve"
+          value={budget.maintenanceReserve}
+          onChange={(v) => onChange('maintenanceReserve', v)}
+          helperText="Recommended: 1% of home value ÷ 12"
+        />
+
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <p className="text-sm font-medium text-gray-700 mb-2">Carried Over Expenses:</p>
+          <p className="text-xs text-gray-600 mb-1">
+            The following expenses from your current budget are included:
+          </p>
+          <ul className="text-xs text-gray-600 space-y-1 ml-4 list-disc">
+            <li>Debt Payments</li>
+            <li>Subscriptions</li>
+            <li>Transportation</li>
+            <li>Groceries</li>
+            <li>Variable Spending</li>
+          </ul>
+          <p className="text-sm font-semibold text-gray-900 mt-2">
+            Total: {formatCurrency(carriedOverExpenses)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700">Expected Monthly Savings:</span>
+          <span
+            className={`text-xl font-bold ${
+              expectedSavings >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {formatCurrency(expectedSavings)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface BudgetInputProps {
+  label: string;
+  value: number;
+  onChange: (value: string) => void;
+  helperText?: string;
+  required?: boolean;
+  disabled?: boolean;
+  link?: { text: string; href: string };
+}
+
+function BudgetInput({
+  label,
+  value,
+  onChange,
+  helperText,
+  required,
+  disabled,
+  link,
+}: BudgetInputProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value.replace(/[^0-9.]/g, '');
+    onChange(inputValue);
+  };
+
+  if (!label) {
+    return (
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+        <input
+          type="text"
+          value={value || ''}
+          onChange={handleChange}
+          disabled={disabled}
+          className={`w-full h-12 pl-8 pr-4 border rounded-lg transition-colors ${
+            disabled
+              ? 'bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200'
+              : 'border-gray-300 focus:border-primary-400 focus:ring-2 focus:ring-primary-400 focus:ring-opacity-20'
+          }`}
+        />
+        {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-sm font-medium text-gray-700">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+        {link && (
+          <a href={link.href} className="text-xs text-primary-400 hover:text-primary-500">
+            {link.text}
+          </a>
+        )}
+      </div>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+        <input
+          type="text"
+          value={value || ''}
+          onChange={handleChange}
+          disabled={disabled}
+          className={`w-full h-12 pl-8 pr-4 border rounded-lg transition-colors ${
+            disabled
+              ? 'bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200'
+              : 'border-gray-300 focus:border-primary-400 focus:ring-2 focus:ring-primary-400 focus:ring-opacity-20'
+          }`}
+          placeholder="0"
+        />
+      </div>
+      {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
+    </div>
+  );
+}
+
+interface BudgetSummaryProps {
+  calculations: BudgetCalculations;
+  formatCurrency: (value: number) => string;
+}
+
+function BudgetSummary({ calculations, formatCurrency }: BudgetSummaryProps) {
+  const { currentMonthlySavings, expectedMonthlySavings, delta } = calculations;
+
+  const getCommentary = () => {
+    if (delta > 500) {
+      return {
+        icon: <CheckCircle className="w-6 h-6 text-green-600" />,
+        color: 'green',
+        title: 'Excellent Financial Position',
+        message:
+          "You'll have more monthly savings as a homeowner! This extra cushion can go towards your emergency fund, home improvements, or additional mortgage payments to build equity faster.",
+      };
+    } else if (delta >= 0) {
+      return {
+        icon: <TrendingUp className="w-6 h-6 text-green-600" />,
+        color: 'green',
+        title: 'Positive Financial Outlook',
+        message:
+          "Your monthly savings will remain stable or slightly improve. You're in a good position to transition to homeownership while maintaining your financial security.",
+      };
+    } else if (delta >= -500) {
+      return {
+        icon: <Info className="w-6 h-6 text-yellow-600" />,
+        color: 'yellow',
+        title: 'Manageable Budget Adjustment',
+        message:
+          'Your monthly savings will decrease slightly, but this is normal when transitioning to homeownership. Review your variable spending to find areas where you can optimize.',
+      };
+    } else {
+      return {
+        icon: <AlertTriangle className="w-6 h-6 text-red-600" />,
+        color: 'red',
+        title: 'Budget Review Recommended',
+        message:
+          'This home may stretch your budget significantly. Consider a lower price range, increasing your down payment to reduce mortgage costs, or finding ways to increase your income before buying.',
+      };
+    }
+  };
+
+  const commentary = getCommentary();
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Budget Comparison Summary</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <p className="text-sm text-gray-600 mb-1">Current Monthly Savings</p>
+          <p
+            className={`text-2xl font-bold ${
+              currentMonthlySavings >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {formatCurrency(currentMonthlySavings)}
+          </p>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <p className="text-sm text-gray-600 mb-1">Expected Monthly Savings</p>
+          <p
+            className={`text-2xl font-bold ${
+              expectedMonthlySavings >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {formatCurrency(expectedMonthlySavings)}
+          </p>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <p className="text-sm text-gray-600 mb-1">Monthly Difference</p>
+          <div className="flex items-center gap-2">
+            {delta >= 0 ? (
+              <TrendingUp className="w-5 h-5 text-green-600" />
+            ) : (
+              <TrendingDown className="w-5 h-5 text-red-600" />
+            )}
+            <p className={`text-2xl font-bold ${delta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {delta >= 0 ? '+' : ''}
+              {formatCurrency(delta)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`rounded-lg p-6 border-2 ${
+          commentary.color === 'green'
+            ? 'bg-green-50 border-green-200'
+            : commentary.color === 'yellow'
+            ? 'bg-yellow-50 border-yellow-200'
+            : 'bg-red-50 border-red-200'
+        }`}
+      >
+        <div className="flex items-start gap-4">
+          {commentary.icon}
+          <div className="flex-1">
+            <h3
+              className={`text-lg font-semibold mb-2 ${
+                commentary.color === 'green'
+                  ? 'text-green-900'
+                  : commentary.color === 'yellow'
+                  ? 'text-yellow-900'
+                  : 'text-red-900'
+              }`}
+            >
+              {commentary.title}
+            </h3>
+            <p
+              className={`text-sm ${
+                commentary.color === 'green'
+                  ? 'text-green-800'
+                  : commentary.color === 'yellow'
+                  ? 'text-yellow-800'
+                  : 'text-red-800'
+              }`}
+            >
+              {commentary.message}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

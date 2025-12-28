@@ -1,0 +1,208 @@
+export const INSPECTION_CATEGORIES = {
+  bathroom: {
+    id: 'bathroom',
+    name: 'Bathroom',
+    description: 'Fixtures, plumbing, ventilation, and overall condition',
+    icon: 'Bath',
+    items: [
+      { id: 'bath_1', itemNumber: 1, description: 'Sink and faucet condition' },
+      { id: 'bath_2', itemNumber: 2, description: 'Toilet flush and fill mechanism' },
+      { id: 'bath_3', itemNumber: 3, description: 'Bathtub or shower pan condition' },
+      { id: 'bath_4', itemNumber: 4, description: 'Shower head and water pressure' },
+      { id: 'bath_5', itemNumber: 5, description: 'Caulking and grout integrity' },
+      { id: 'bath_6', itemNumber: 6, description: 'Tile or wall surface condition' },
+      { id: 'bath_7', itemNumber: 7, description: 'Exhaust fan operation' },
+      { id: 'bath_8', itemNumber: 8, description: 'Mirror and medicine cabinet' },
+      { id: 'bath_9', itemNumber: 9, description: 'Lighting fixtures and GFCI outlets' },
+      { id: 'bath_10', itemNumber: 10, description: 'Floor condition and water damage signs' },
+      { id: 'bath_11', itemNumber: 11, description: 'Cabinet and vanity storage' },
+      { id: 'bath_12', itemNumber: 12, description: 'Door and lock functionality' },
+    ],
+  },
+  kitchen: {
+    id: 'kitchen',
+    name: 'Kitchen',
+    description: 'Appliances, cabinetry, plumbing, and electrical',
+    icon: 'UtensilsCrossed',
+    items: [
+      { id: 'kit_1', itemNumber: 1, description: 'Refrigerator operation and temperature' },
+      { id: 'kit_2', itemNumber: 2, description: 'Stove/range burners and oven' },
+      { id: 'kit_3', itemNumber: 3, description: 'Dishwasher operation and drainage' },
+      { id: 'kit_4', itemNumber: 4, description: 'Microwave operation' },
+      { id: 'kit_5', itemNumber: 5, description: 'Garbage disposal functionality' },
+      { id: 'kit_6', itemNumber: 6, description: 'Kitchen sink and faucet' },
+      { id: 'kit_7', itemNumber: 7, description: 'Cabinet doors and hinges' },
+      { id: 'kit_8', itemNumber: 8, description: 'Drawer slides and stops' },
+      { id: 'kit_9', itemNumber: 9, description: 'Countertop condition and seams' },
+      { id: 'kit_10', itemNumber: 10, description: 'Backsplash integrity' },
+      { id: 'kit_11', itemNumber: 11, description: 'Range hood and ventilation' },
+      { id: 'kit_12', itemNumber: 12, description: 'Under-sink plumbing for leaks' },
+      { id: 'kit_13', itemNumber: 13, description: 'Kitchen lighting and outlets' },
+      { id: 'kit_14', itemNumber: 14, description: 'Pantry storage condition' },
+      { id: 'kit_15', itemNumber: 15, description: 'Floor condition and grout' },
+    ],
+  },
+  interior: {
+    id: 'interior',
+    name: 'Interior Rooms',
+    description: 'Living spaces, bedrooms, flooring, and walls',
+    icon: 'Home',
+    items: [
+      { id: 'int_1', itemNumber: 1, description: 'Living room floor condition' },
+      { id: 'int_2', itemNumber: 2, description: 'Wall paint and drywall integrity' },
+      { id: 'int_3', itemNumber: 3, description: 'Ceiling condition and stains' },
+      { id: 'int_4', itemNumber: 4, description: 'Baseboards and trim condition' },
+      { id: 'int_5', itemNumber: 5, description: 'Master bedroom flooring' },
+      { id: 'int_6', itemNumber: 6, description: 'Bedroom closet doors and storage' },
+      { id: 'int_7', itemNumber: 7, description: 'Additional bedroom conditions' },
+      { id: 'int_8', itemNumber: 8, description: 'Hallway flooring and walls' },
+      { id: 'int_9', itemNumber: 9, description: 'Staircase stability and railings' },
+      { id: 'int_10', itemNumber: 10, description: 'Light fixtures and switches' },
+      { id: 'int_11', itemNumber: 11, description: 'Electrical outlets functionality' },
+      { id: 'int_12', itemNumber: 12, description: 'Storage spaces and built-ins' },
+    ],
+  },
+  windowsDoors: {
+    id: 'windowsDoors',
+    name: 'Windows & Doors',
+    description: 'Window operation, door functionality, and weatherproofing',
+    icon: 'DoorOpen',
+    items: [
+      { id: 'wd_1', itemNumber: 1, description: 'Front door condition and lock' },
+      { id: 'wd_2', itemNumber: 2, description: 'Back door and weatherstripping' },
+      { id: 'wd_3', itemNumber: 3, description: 'Interior door latches and hinges' },
+      { id: 'wd_4', itemNumber: 4, description: 'Window operation and locks' },
+      { id: 'wd_5', itemNumber: 5, description: 'Window screens and frames' },
+      { id: 'wd_6', itemNumber: 6, description: 'Window seals and caulking' },
+      { id: 'wd_7', itemNumber: 7, description: 'Sliding glass door operation' },
+      { id: 'wd_8', itemNumber: 8, description: 'Storm door condition' },
+    ],
+  },
+  exterior: {
+    id: 'exterior',
+    name: 'Exterior/Grounds',
+    description: 'Siding, roof, driveway, and landscaping',
+    icon: 'Trees',
+    items: [
+      { id: 'ext_1', itemNumber: 1, description: 'Roof shingles and overall condition' },
+      { id: 'ext_2', itemNumber: 2, description: 'Gutters and downspouts' },
+      { id: 'ext_3', itemNumber: 3, description: 'Siding condition and damage' },
+      { id: 'ext_4', itemNumber: 4, description: 'Exterior paint and trim' },
+      { id: 'ext_5', itemNumber: 5, description: 'Driveway cracks and settlement' },
+      { id: 'ext_6', itemNumber: 6, description: 'Walkways and sidewalks' },
+      { id: 'ext_7', itemNumber: 7, description: 'Deck or patio condition' },
+      { id: 'ext_8', itemNumber: 8, description: 'Fence condition and gates' },
+      { id: 'ext_9', itemNumber: 9, description: 'Drainage and grading' },
+      { id: 'ext_10', itemNumber: 10, description: 'Landscaping and trees' },
+    ],
+  },
+  foundation: {
+    id: 'foundation',
+    name: 'Foundation & Basement',
+    description: 'Structural integrity, moisture, and basement condition',
+    icon: 'Building',
+    items: [
+      { id: 'fnd_1', itemNumber: 1, description: 'Foundation walls for cracks' },
+      { id: 'fnd_2', itemNumber: 2, description: 'Basement floor condition' },
+      { id: 'fnd_3', itemNumber: 3, description: 'Signs of moisture or water damage' },
+      { id: 'fnd_4', itemNumber: 4, description: 'Sump pump operation' },
+      { id: 'fnd_5', itemNumber: 5, description: 'Basement walls and insulation' },
+      { id: 'fnd_6', itemNumber: 6, description: 'Support beams and joists' },
+      { id: 'fnd_7', itemNumber: 7, description: 'Basement windows and wells' },
+      { id: 'fnd_8', itemNumber: 8, description: 'Musty odors or mold signs' },
+    ],
+  },
+  hvac: {
+    id: 'hvac',
+    name: 'HVAC',
+    description: 'Heating, ventilation, and air conditioning systems',
+    icon: 'Wind',
+    items: [
+      { id: 'hvac_1', itemNumber: 1, description: 'Furnace age and operation' },
+      { id: 'hvac_2', itemNumber: 2, description: 'Air conditioning unit condition' },
+      { id: 'hvac_3', itemNumber: 3, description: 'Thermostat functionality' },
+      { id: 'hvac_4', itemNumber: 4, description: 'Air filter condition and access' },
+      { id: 'hvac_5', itemNumber: 5, description: 'Ductwork and vents inspection' },
+    ],
+  },
+  plumbing: {
+    id: 'plumbing',
+    name: 'Plumbing',
+    description: 'Water heater, pipes, and water pressure',
+    icon: 'Droplet',
+    items: [
+      { id: 'plm_1', itemNumber: 1, description: 'Water heater age and condition' },
+      { id: 'plm_2', itemNumber: 2, description: 'Water pressure throughout home' },
+      { id: 'plm_3', itemNumber: 3, description: 'Visible pipe condition (copper/PEX)' },
+      { id: 'plm_4', itemNumber: 4, description: 'Signs of leaks under sinks' },
+      { id: 'plm_5', itemNumber: 5, description: 'Main water shut-off valve' },
+      { id: 'plm_6', itemNumber: 6, description: 'Drainage and slow drains' },
+    ],
+  },
+  electrical: {
+    id: 'electrical',
+    name: 'Electrical',
+    description: 'Panel, outlets, switches, and overall electrical system',
+    icon: 'Zap',
+    items: [
+      { id: 'elc_1', itemNumber: 1, description: 'Electrical panel age and labeling' },
+      { id: 'elc_2', itemNumber: 2, description: 'Circuit breaker condition' },
+      { id: 'elc_3', itemNumber: 3, description: 'GFCI outlets in wet areas' },
+      { id: 'elc_4', itemNumber: 4, description: 'Light switches functionality' },
+      { id: 'elc_5', itemNumber: 5, description: 'Outlet covers and condition' },
+      { id: 'elc_6', itemNumber: 6, description: 'Exterior outlets and GFCI' },
+      { id: 'elc_7', itemNumber: 7, description: 'Ceiling fan operation' },
+      { id: 'elc_8', itemNumber: 8, description: 'Doorbell functionality' },
+    ],
+  },
+  safety: {
+    id: 'safety',
+    name: 'Safety & General',
+    description: 'Safety devices, security, and general observations',
+    icon: 'Shield',
+    items: [
+      { id: 'saf_1', itemNumber: 1, description: 'Smoke detectors presence and testing' },
+      { id: 'saf_2', itemNumber: 2, description: 'Carbon monoxide detectors' },
+      { id: 'saf_3', itemNumber: 3, description: 'Fire extinguisher location' },
+      { id: 'saf_4', itemNumber: 4, description: 'Stairway handrails and stability' },
+      { id: 'saf_5', itemNumber: 5, description: 'Garage door opener safety features' },
+      { id: 'saf_6', itemNumber: 6, description: 'Outdoor lighting condition' },
+      { id: 'saf_7', itemNumber: 7, description: 'Security system presence' },
+      { id: 'saf_8', itemNumber: 8, description: 'Overall home maintenance level' },
+    ],
+  },
+};
+
+export const getTotalItemCount = (): number => {
+  return Object.values(INSPECTION_CATEGORIES).reduce(
+    (total, category) => total + category.items.length,
+    0
+  );
+};
+
+export const initializeInspectionData = (): Record<string, any> => {
+  const categories: Record<string, any> = {};
+
+  Object.values(INSPECTION_CATEGORIES).forEach((category) => {
+    categories[category.id] = {
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      icon: category.icon,
+      items: category.items.map((item) => ({
+        ...item,
+        evaluation: null,
+        notes: '',
+        evaluatedAt: undefined,
+      })),
+      photos: [],
+      sectionNotes: '',
+      completedCount: 0,
+      goodCount: 0,
+      fixCount: 0,
+      replaceCount: 0,
+    };
+  });
+
+  return categories;
+};
