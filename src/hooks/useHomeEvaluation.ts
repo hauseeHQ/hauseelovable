@@ -102,7 +102,7 @@ export function useHomeEvaluation(homeId: string) {
       const { data, error: saveError } = await supabase
         .from('home_evaluations')
         .upsert(record, {
-          onConflict: 'home_id,user_id,workspace_id',
+          onConflict: 'home_id,user_id',
         })
         .select()
         .single();

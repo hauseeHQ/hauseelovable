@@ -984,7 +984,7 @@ export async function saveEvaluation(
     const { data, error } = await supabase
       .from('home_evaluations')
       .upsert(record, {
-        onConflict: 'home_id,workspace_id',
+        onConflict: 'home_id,user_id',
       })
       .select()
       .single();
