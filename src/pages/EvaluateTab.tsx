@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { EvaluateTabType } from '../types';
 import { useHomes } from '../hooks/useHomes';
@@ -46,6 +47,14 @@ export default function EvaluateTab() {
     }
   };
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => handleNextTab(),
+    onSwipedRight: () => handlePreviousTab(),
+    trackMouse: false,
+    trackTouch: true,
+    delta: 50,
+  });
+
   const handleAddHome = async (formData: any) => {
     const result = await addHome(formData);
     if (result.success) {
@@ -72,8 +81,9 @@ export default function EvaluateTab() {
             <div className="flex items-center justify-between">
               <button
                 onClick={handlePreviousTab}
-                className="hidden md:block p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="hidden md:block p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 disabled={activeTab === 'browse'}
+                aria-label="Previous tab"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -103,8 +113,9 @@ export default function EvaluateTab() {
 
               <button
                 onClick={handleNextTab}
-                className="hidden md:block p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="hidden md:block p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 disabled={activeTab === 'inspection'}
+                aria-label="Next tab"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -112,13 +123,24 @@ export default function EvaluateTab() {
           </div>
 
           <div className="text-center mt-2 text-xs text-gray-500">
-            <span className="md:hidden">Swipe left to {activeTab === 'browse' ? 'Compare' : 'Inspection'}</span>
-            <span className="hidden md:inline">Click arrows to switch tabs</span>
+            {activeTab === 'browse' && (
+              <span className="md:hidden">Swipe left to Compare</span>
+            )}
+            {activeTab === 'compare' && (
+              <span className="md:hidden">Swipe left to Inspection or right to Browse</span>
+            )}
+            {activeTab === 'inspection' && (
+              <span className="md:hidden">Swipe right to Compare</span>
+            )}
+            <span className="hidden md:inline">Use arrow buttons or click tabs to navigate</span>
           </div>
         </div>
       </div>
 
-      <div className={`transition-opacity duration-300 ${fadeTransition ? 'opacity-0' : 'opacity-100'}`}>
+      <div
+        {...swipeHandlers}
+        className={`transition-opacity duration-300 ${fadeTransition ? 'opacity-0' : 'opacity-100'}`}
+      >
         {activeTab === 'browse' && (
           <EvaluateBrowse
             homes={homes}
