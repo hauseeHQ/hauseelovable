@@ -79,7 +79,10 @@ export default function EvaluateTab({ initialHomeId }: EvaluateTabProps) {
     navigate('/evaluate', { replace: false });
   };
 
-  const handleStartRating = () => {
+  const handleStartRating = async () => {
+    if (selectedHomeId && user?.id) {
+      await loadHomeEvaluation(selectedHomeId);
+    }
     setViewMode('rating');
   };
 
@@ -98,7 +101,10 @@ export default function EvaluateTab({ initialHomeId }: EvaluateTabProps) {
 
   const handleEvaluationUpdate = async () => {
     if (selectedHomeId && user?.id) {
-      await loadHomeEvaluation(selectedHomeId);
+      const { data } = await loadEvaluation(selectedHomeId, user.id);
+      if (data) {
+        setEvaluation(data);
+      }
     }
   };
 
