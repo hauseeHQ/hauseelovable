@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronRight, Heart, Star, ChevronLeft } from 'lucide-react';
+import { Heart, ChevronLeft } from 'lucide-react';
 import { Home, HomeEvaluation } from '../types';
 import { loadHomes, updateHome, loadEvaluation } from '../lib/supabaseClient';
 import { useToast } from '../components/ToastContainer';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EvaluationModal from '../components/evaluation/EvaluationModal';
+import HomeDetailsSection from '../components/homedetail/HomeDetailsSection';
+import EvaluationDetailsSection from '../components/homedetail/EvaluationDetailsSection';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function HomeDetailPage() {
@@ -108,154 +110,56 @@ export default function HomeDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <nav className="flex items-center gap-2 text-sm">
-            <button
-              onClick={() => navigate('/evaluate')}
-              className="text-gray-500 hover:text-gray-700 flex items-center gap-1"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Browse
-            </button>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-900 font-medium truncate max-w-[200px] md:max-w-none">
-              {home.address}
-            </span>
-          </nav>
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center">
+          <button
+            onClick={() => navigate('/evaluate')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Evaluate</span>
+          </button>
         </div>
       </header>
 
-      <section className="relative h-64 md:h-96 bg-gray-300">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
-
-        <button
-          onClick={handleToggleFavorite}
-          className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-colors"
-        >
-          <Heart
-            className={`w-6 h-6 ${home.favorite ? 'fill-primary-400 text-primary-400' : 'text-gray-600'}`}
-          />
-        </button>
-
-        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <h1 className="text-3xl font-bold mb-2">{home.address}</h1>
-          <p className="text-lg mb-4">{home.neighborhood}</p>
-          <div className="flex items-center gap-6 text-sm">
-            <span>{home.bedrooms} bed</span>
-            <span>{home.bathrooms} bath</span>
-            {home.squareFootage && <span>{home.squareFootage.toLocaleString()} sq ft</span>}
-          </div>
-        </div>
-      </section>
-
-      <div className="bg-white border-y border-gray-200 py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <span className="text-sm font-medium text-gray-700">
-              Would you make an offer on this home?
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleOfferIntentChange('yes')}
-                className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                  home.offerIntent === 'yes'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => handleOfferIntentChange('maybe')}
-                className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                  home.offerIntent === 'maybe'
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Maybe
-              </button>
-              <button
-                onClick={() => handleOfferIntentChange('no')}
-                className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                  home.offerIntent === 'no'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                No
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <Star className="w-6 h-6 text-yellow-600" />
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="relative bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl overflow-hidden mb-6" style={{ height: '280px' }}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-32 h-32 mx-auto mb-4 bg-gray-400/30 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 bg-gray-400/40 rounded-full" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Overall Rating</h3>
-                <p className="text-sm text-gray-600">Your comprehensive score</p>
+              <div className="space-y-2">
+                <div className="w-48 h-16 mx-auto bg-gray-400/30 rounded-lg" />
+                <div className="w-64 h-12 mx-auto bg-gray-400/30 rounded-lg" />
               </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900">
-                {evaluation ? evaluation.overallRating.toFixed(1) : '0.0'}
-              </span>
-              <span className="text-gray-500">/ 5.0</span>
-            </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Listing Price</h3>
-            <p className="text-3xl font-bold text-primary-400">{formatCurrency(home.price)}</p>
-            {home.propertyTaxes && (
-              <p className="text-sm text-gray-600 mt-2">
-                Property taxes: {formatCurrency(home.propertyTaxes)}/year
-              </p>
-            )}
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Evaluation Progress</h3>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-bold text-gray-900">
-                {evaluation ? evaluation.completionPercentage : 0}%
-              </span>
-              <span className="text-gray-500">complete</span>
-            </div>
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary-400 transition-all duration-300"
-                style={{ width: `${evaluation ? evaluation.completionPercentage : 0}%` }}
-              />
-            </div>
-          </div>
+          <button
+            onClick={handleToggleFavorite}
+            className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            <Heart
+              className={`w-5 h-5 ${home.favorite ? 'fill-rose-500 text-rose-500' : 'text-gray-600'}`}
+            />
+          </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-8 border border-gray-200 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {evaluation && evaluation.evaluationStatus !== 'not_started'
-              ? 'Continue Your Evaluation'
-              : 'Start Comprehensive Evaluation'}
-          </h2>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Rate this home across 9 categories with 100+ data points to make an informed decision.
-            Your progress is automatically saved.
-          </p>
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{home.address}</h1>
+          <p className="text-gray-600 mb-4">{home.neighborhood}</p>
           <button
             onClick={() => setShowEvaluationModal(true)}
-            className="px-8 py-4 bg-primary-400 text-white rounded-lg hover:bg-primary-500 transition-colors font-medium text-lg shadow-md hover:shadow-lg"
+            className="px-8 py-3 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors font-medium shadow-sm"
           >
-            {evaluation && evaluation.evaluationStatus !== 'not_started'
-              ? 'Continue Evaluation'
-              : 'Start Evaluation'}
+            Rate this Home
           </button>
+        </div>
+
+        <div className="space-y-6">
+          <HomeDetailsSection home={home} />
+          <EvaluationDetailsSection evaluation={evaluation} />
         </div>
       </div>
 
