@@ -729,6 +729,30 @@ export async function addHome(
       return { success: false, error: workspaceError || 'Failed to initialize workspace' };
     }
 
+    // Check for duplicate address in user's homes
+    const normalizedAddress = formData.address.trim().toLowerCase();
+    const { data: existingHomes, error: checkError } = await supabase
+      .from('homes')
+      .select('id, address')
+      .eq('user_id', userId)
+      .eq('workspace_id', workspaceId);
+
+    if (checkError) {
+      console.error('Error checking for duplicates:', checkError);
+      return { success: false, error: 'Failed to check for duplicate addresses' };
+    }
+
+    const duplicate = existingHomes?.find(
+      home => home.address.trim().toLowerCase() === normalizedAddress
+    );
+
+    if (duplicate) {
+      return {
+        success: false,
+        error: 'You have already added this address. Please check your homes list.'
+      };
+    }
+
     const record = {
       user_id: userId,
       workspace_id: workspaceId,

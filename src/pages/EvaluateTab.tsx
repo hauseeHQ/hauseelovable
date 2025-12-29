@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Plus, Home as HomeIcon, Heart, X, Mountain, Printer, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Home as HomeIcon, Heart, X, Mountain, Printer, ChevronDown, Search } from 'lucide-react';
 import { EvaluateTabType, Home, AddHomeFormData } from '../types';
 import { loadHomes, addHome, updateHome } from '../lib/supabaseClient';
 import InspectionView from '../components/inspection/InspectionView';
@@ -218,6 +218,17 @@ function BrowseView({
   compareCount,
 }: BrowseViewProps) {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredHomes = homes.filter((home) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    const addressMatch = home.address.toLowerCase().includes(query);
+    const neighborhoodMatch = home.neighborhood?.toLowerCase().includes(query);
+    return addressMatch || neighborhoodMatch;
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -240,17 +251,59 @@ function BrowseView({
 
   return (
     <div className="relative">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {homes.map((home) => (
-          <HomeCard
-            key={home.id}
-            home={home}
-            onToggleFavorite={onToggleFavorite}
-            onToggleCompare={onToggleCompare}
-            onCardClick={() => navigate(`/evaluate/${home.id}`)}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by address or neighborhood..."
+            className="w-full h-12 pl-10 pr-4 border border-gray-300 rounded-lg focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-colors"
           />
-        ))}
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-gray-600">
+            Found {filteredHomes.length} {filteredHomes.length === 1 ? 'home' : 'homes'}
+          </p>
+        )}
       </div>
+
+      {filteredHomes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <Search className="w-16 h-16 text-gray-300 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No homes found</h3>
+          <p className="text-gray-600 text-center max-w-md mb-6">
+            No homes match your search. Try a different address or neighborhood.
+          </p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="text-primary-400 hover:text-primary-500 font-medium"
+          >
+            Clear search
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredHomes.map((home) => (
+            <HomeCard
+              key={home.id}
+              home={home}
+              onToggleFavorite={onToggleFavorite}
+              onToggleCompare={onToggleCompare}
+              onCardClick={() => navigate(`/evaluate/${home.id}`)}
+            />
+          ))}
+        </div>
+      )}
 
       <button
         onClick={onAddHome}
