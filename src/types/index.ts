@@ -651,6 +651,7 @@ export interface HomeEvaluation {
   };
 
   overallRating: number;
+  userOverallRating?: number;
   completionPercentage: number;
   evaluationStatus: 'not_started' | 'in_progress' | 'completed';
 

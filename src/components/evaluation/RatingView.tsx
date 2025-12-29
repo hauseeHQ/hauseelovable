@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronDown, ChevronUp, Check, Save, ArrowUp } from 'lucide-react';
+import { ChevronLeft, ChevronDown, ChevronUp, Check, Save, ArrowUp, Star } from 'lucide-react';
 import { Home, HomeEvaluation, RatingValue } from '../../types';
 import { EVALUATION_CATEGORIES, calculateOverallRating, calculateCompletionPercentage } from '../../data/evaluationCategories';
 import { saveEvaluation } from '../../lib/supabaseClient';
@@ -23,6 +23,7 @@ export default function RatingView({ home, evaluation, onBack, onUpdate }: Ratin
   const [ratings, setRatings] = useState<HomeEvaluation['ratings']>({});
   const [itemNotes, setItemNotes] = useState<HomeEvaluation['itemNotes']>({});
   const [sectionNotes, setSectionNotes] = useState<HomeEvaluation['sectionNotes']>({});
+  const [userOverallRating, setUserOverallRating] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
@@ -34,6 +35,7 @@ export default function RatingView({ home, evaluation, onBack, onUpdate }: Ratin
       setRatings(evaluation.ratings || {});
       setItemNotes(evaluation.itemNotes || {});
       setSectionNotes(evaluation.sectionNotes || {});
+      setUserOverallRating(evaluation.userOverallRating || null);
     }
   }, [evaluation]);
 
@@ -64,6 +66,7 @@ export default function RatingView({ home, evaluation, onBack, onUpdate }: Ratin
         itemNotes,
         sectionNotes,
         overallRating,
+        userOverallRating,
         completionPercentage,
         evaluationStatus: completionPercentage > 0 ? 'in_progress' as const : 'not_started' as const,
       };
@@ -81,7 +84,7 @@ export default function RatingView({ home, evaluation, onBack, onUpdate }: Ratin
     } finally {
       setIsSaving(false);
     }
-  }, [ratings, itemNotes, sectionNotes, home.id, onUpdate, user, navigate]);
+  }, [ratings, itemNotes, sectionNotes, userOverallRating, home.id, onUpdate, user, navigate]);
 
   const debouncedSave = useCallback(() => {
     if (saveTimeoutRef.current) {
@@ -152,6 +155,11 @@ export default function RatingView({ home, evaluation, onBack, onUpdate }: Ratin
     setExpandedCategories(new Set());
   };
 
+  const handleOverallRatingChange = (rating: number) => {
+    setUserOverallRating(rating);
+    debouncedSave();
+  };
+
   const handleBackClick = async () => {
     const completionPercentage = calculateCompletionPercentage(ratings);
     if (completionPercentage > 0 && completionPercentage < 100) {
@@ -217,7 +225,42 @@ export default function RatingView({ home, evaluation, onBack, onUpdate }: Ratin
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Overall Home Rating
+              </label>
+              <p className="text-xs text-gray-600 mb-3">
+                Rate your overall impression of this home (1-5 stars)
+              </p>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => handleOverallRatingChange(star)}
+                    className="group transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`w-8 h-8 transition-colors ${
+                        userOverallRating && star <= userOverallRating
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300 group-hover:text-yellow-200'
+                      }`}
+                    />
+                  </button>
+                ))}
+                {userOverallRating && (
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    {userOverallRating} / 5
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 mb-4">
           <button
             onClick={handleExpandAll}
             className="text-sm text-primary-400 hover:text-primary-500 transition-colors flex items-center gap-1"
