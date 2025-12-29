@@ -598,12 +598,11 @@ export async function loadDownPaymentTracker(
 
 export async function loadHomes(userId: string): Promise<{ data: Home[] | null; error?: string }> {
   try {
-    // Use user_id as workspace_id (one workspace per user)
+    // Load homes based on user's workspace memberships
     const { data, error } = await supabase
       .from('homes')
       .select('*')
       .eq('user_id', userId)
-      .eq('workspace_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -643,15 +642,78 @@ export async function loadHomes(userId: string): Promise<{ data: Home[] | null; 
   }
 }
 
+export async function ensureUserWorkspace(userId: string): Promise<{ workspaceId: string | null; error?: string }> {
+  try {
+    // First, check if user already has a workspace membership
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('workspace_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (membership?.workspace_id) {
+      return { workspaceId: membership.workspace_id };
+    }
+
+    // Get the user's UUID from auth
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { workspaceId: null, error: 'User not authenticated' };
+    }
+
+    // Create a workspace for the user
+    const { data: workspace, error: workspaceError } = await supabase
+      .from('workspaces')
+      .insert({
+        name: 'My Workspace',
+        created_by: user.id,
+      })
+      .select('id')
+      .single();
+
+    if (workspaceError || !workspace) {
+      console.error('Error creating workspace:', workspaceError);
+      return { workspaceId: null, error: workspaceError?.message || 'Failed to create workspace' };
+    }
+
+    // Add user as owner of the workspace
+    const { error: memberError } = await supabase
+      .from('workspace_members')
+      .insert({
+        workspace_id: workspace.id,
+        user_id: userId,
+        role: 'owner',
+      });
+
+    if (memberError) {
+      console.error('Error adding workspace member:', memberError);
+      return { workspaceId: null, error: memberError.message };
+    }
+
+    return { workspaceId: workspace.id };
+  } catch (err) {
+    console.error('Error ensuring workspace:', err);
+    return {
+      workspaceId: null,
+      error: err instanceof Error ? err.message : 'Unknown error',
+    };
+  }
+}
+
 export async function addHome(
   userId: string,
   formData: AddHomeFormData
 ): Promise<{ success: boolean; error?: string; home?: Home }> {
   try {
-    // Use user_id as workspace_id (one workspace per user)
+    // Ensure user has a workspace
+    const { workspaceId, error: workspaceError } = await ensureUserWorkspace(userId);
+    if (!workspaceId || workspaceError) {
+      return { success: false, error: workspaceError || 'Failed to initialize workspace' };
+    }
+
     const record = {
       user_id: userId,
-      workspace_id: userId,
+      workspace_id: workspaceId,
       address: formData.address,
       neighborhood: formData.neighborhood,
       price: formData.price,
