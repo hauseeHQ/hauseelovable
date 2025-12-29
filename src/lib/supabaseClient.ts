@@ -941,6 +941,7 @@ export async function loadEvaluation(
       itemNotes: data.item_notes || {},
       sectionNotes: data.section_notes || {},
       overallRating: Number(data.overall_rating),
+      userOverallRating: data.user_overall_rating ? Number(data.user_overall_rating) : undefined,
       completionPercentage: data.completion_percentage,
       evaluationStatus: data.evaluation_status,
       startedAt: data.started_at,
