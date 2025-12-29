@@ -90,6 +90,12 @@ export default function EvaluateTab({ initialHomeId }: EvaluateTabProps) {
     }
   };
 
+  const handleGoToInspection = () => {
+    setViewMode('tab');
+    setActiveTab('inspection');
+    navigate('/evaluate', { replace: false });
+  };
+
   const handleEvaluationUpdate = async () => {
     if (selectedHomeId && user?.id) {
       await loadHomeEvaluation(selectedHomeId);
@@ -214,6 +220,7 @@ export default function EvaluateTab({ initialHomeId }: EvaluateTabProps) {
             homeId={selectedHome.id}
             onBack={handleBackToBrowse}
             onStartRating={handleStartRating}
+            onGoToInspection={handleGoToInspection}
           />
         ) : viewMode === 'rating' && selectedHome ? (
           <RatingView
@@ -243,7 +250,11 @@ export default function EvaluateTab({ initialHomeId }: EvaluateTabProps) {
               />
             )}
             {activeTab === 'inspection' && (
-              <InspectionView homes={homes} onBackToBrowse={() => setActiveTab('browse')} />
+              <InspectionView
+                homes={homes}
+                onBackToBrowse={() => setActiveTab('browse')}
+                initialHomeId={selectedHomeId}
+              />
             )}
           </>
         )}

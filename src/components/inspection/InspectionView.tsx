@@ -16,11 +16,12 @@ import InspectionProgressBar from './InspectionProgressBar';
 interface InspectionViewProps {
   homes: Home[];
   onBackToBrowse: () => void;
+  initialHomeId?: string | null;
 }
 
-export default function InspectionView({ homes, onBackToBrowse }: InspectionViewProps) {
+export default function InspectionView({ homes, onBackToBrowse, initialHomeId }: InspectionViewProps) {
   const [selectedHomeId, setSelectedHomeId] = useState<string | null>(
-    homes.length > 0 ? homes[0].id : null
+    initialHomeId || (homes.length > 0 ? homes[0].id : null)
   );
   const [showHomeSelector, setShowHomeSelector] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());

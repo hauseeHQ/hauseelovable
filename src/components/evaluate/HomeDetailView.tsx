@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Star, Edit2, ChevronLeft } from 'lucide-react';
+import { Heart, Star, Edit2, ChevronLeft, ClipboardCheck } from 'lucide-react';
 import { Home, HomeEvaluation } from '../../types';
 import { loadHomes, updateHome, loadEvaluation } from '../../lib/supabaseClient';
 import { useToast } from '../ToastContainer';
@@ -13,9 +13,10 @@ interface HomeDetailViewProps {
   homeId: string;
   onBack: () => void;
   onStartRating: () => void;
+  onGoToInspection?: () => void;
 }
 
-export default function HomeDetailView({ homeId, onBack, onStartRating }: HomeDetailViewProps) {
+export default function HomeDetailView({ homeId, onBack, onStartRating, onGoToInspection }: HomeDetailViewProps) {
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
 
@@ -209,14 +210,25 @@ export default function HomeDetailView({ homeId, onBack, onStartRating }: HomeDe
       </div>
 
       <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-3">
+          <button
+            onClick={onStartRating}
+            className="inline-flex items-center gap-2 px-5 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Edit2 className="w-4 h-4" />
+            {evaluation && evaluation.evaluationStatus !== 'not_started' ? 'Edit Rating' : 'Rate this Home'}
+          </button>
 
-        <button
-          onClick={onStartRating}
-          className="inline-flex items-center gap-2 px-5 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <Edit2 className="w-4 h-4" />
-          {evaluation && evaluation.evaluationStatus !== 'not_started' ? 'Edit Rating' : 'Rate this Home'}
-        </button>
+          {onGoToInspection && (
+            <button
+              onClick={onGoToInspection}
+              className="inline-flex items-center gap-2 px-5 py-2 text-sm bg-primary-400 text-white rounded-lg hover:bg-primary-500 transition-colors"
+            >
+              <ClipboardCheck className="w-4 h-4" />
+              Inspect this Home
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6">
