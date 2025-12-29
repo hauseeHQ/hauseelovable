@@ -693,6 +693,7 @@ export async function ensureUserWorkspace(userId: string): Promise<{ workspaceId
       .from('workspaces')
       .insert({
         name: 'My Workspace',
+        created_by: user.id,
       })
       .select('id')
       .single();
