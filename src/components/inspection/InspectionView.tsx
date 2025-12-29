@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  ChevronDown,
   ChevronUp,
   AlertCircle,
   Filter,
@@ -21,11 +20,8 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
   const [selectedHomeId, setSelectedHomeId] = useState<string | null>(
     homes.length > 0 ? homes[0].id : null
   );
-  const [showHomeSelector, setShowHomeSelector] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<InspectionFilterType>('all');
-  const [showSwitchModal, setShowSwitchModal] = useState(false);
-  const [pendingHomeId, setPendingHomeId] = useState<string | null>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   const { inspection, loading, error, updateRating, updateNotes, updateSectionNotes } =
@@ -47,26 +43,6 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleHomeChange = (homeId: string) => {
-    if (homeId === selectedHomeId) return;
-
-    const hasProgress = inspection && inspection.overall_progress.completed > 0;
-    if (hasProgress) {
-      setPendingHomeId(homeId);
-      setShowSwitchModal(true);
-    } else {
-      setSelectedHomeId(homeId);
-    }
-  };
-
-  const confirmHomeSwitch = () => {
-    if (pendingHomeId) {
-      setSelectedHomeId(pendingHomeId);
-      setPendingHomeId(null);
-    }
-    setShowSwitchModal(false);
   };
 
   const handleToggleCategory = (categoryId: string) => {
@@ -148,35 +124,9 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">DIY Home Inspection</h2>
             {selectedHome && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowHomeSelector(!showHomeSelector)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-medium text-gray-900">{selectedHome.address}</span>
-                  <span className="text-gray-500">- {selectedHome.city}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                </button>
-
-                {showHomeSelector && (
-                  <div className="absolute top-full left-0 mt-2 w-full md:w-96 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                    {homes.map((home) => (
-                      <button
-                        key={home.id}
-                        onClick={() => {
-                          handleHomeChange(home.id);
-                          setShowHomeSelector(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                          home.id === selectedHomeId ? 'bg-primary-50' : ''
-                        }`}
-                      >
-                        <div className="font-medium text-gray-900">{home.address}</div>
-                        <div className="text-sm text-gray-600">{home.city}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="text-gray-700">
+                <span className="font-medium">{selectedHome.address}</span>
+                <span className="text-gray-500"> - {selectedHome.city}</span>
               </div>
             )}
           </div>
@@ -287,32 +237,6 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
           )}
         </>
       ) : null}
-
-      {showSwitchModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Switch Home?</h3>
-            <p className="text-gray-600 mb-6">
-              You have inspection progress on the current home. Switching will save your work and load
-              the new home's inspection.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowSwitchModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmHomeSwitch}
-                className="flex-1 px-4 py-2 bg-primary-400 text-white rounded-lg hover:bg-primary-500 transition-colors"
-              >
-                Switch Home
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
