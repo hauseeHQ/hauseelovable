@@ -136,30 +136,39 @@ export default function HomeDetailView({ homeId, onBack, onStartRating }: HomeDe
         </button>
       </div>
 
-      {evaluation && evaluation.overallRating > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-6 h-6 ${
-                    star <= Math.round(evaluation.overallRating)
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-xl font-bold text-gray-900">
-              {evaluation.overallRating.toFixed(1)}
-            </span>
-            <span className="text-sm text-gray-500">
-              ({evaluation.completionPercentage}% complete)
-            </span>
+      <div className="text-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{home.address}</h1>
+        <p className="text-gray-600">{home.neighborhood}</p>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+        <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                className={`w-6 h-6 ${
+                  evaluation && star <= Math.round(evaluation.overallRating)
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                }`}
+              />
+            ))}
           </div>
+          {evaluation && evaluation.overallRating > 0 ? (
+            <>
+              <span className="text-xl font-bold text-gray-900">
+                {evaluation.overallRating.toFixed(1)}
+              </span>
+              <span className="text-sm text-gray-500">
+                ({evaluation.completionPercentage}% complete)
+              </span>
+            </>
+          ) : (
+            <span className="text-sm text-gray-500">Not yet rated</span>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
         <p className="text-sm font-medium text-gray-700 mb-3 text-center">
@@ -200,8 +209,6 @@ export default function HomeDetailView({ homeId, onBack, onStartRating }: HomeDe
       </div>
 
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">{home.address}</h1>
-        <p className="text-gray-600 mb-3">{home.neighborhood}</p>
 
         <button
           onClick={onStartRating}
