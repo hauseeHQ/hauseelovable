@@ -22,7 +22,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const TESTING_MODE = true;
+  const TESTING_MODE = false;
 
   const mockUser: User = {
     id: 'test-user-id-123',
