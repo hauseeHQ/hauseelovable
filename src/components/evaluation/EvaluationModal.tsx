@@ -236,22 +236,24 @@ export default function EvaluationModal({ home, evaluation, onClose, onUpdate }:
             ))}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Section Notes (optional, max 1000 characters)
-            </label>
-            <textarea
-              value={sectionNotes[currentSection.id] || ''}
-              onChange={(e) => handleSectionNoteChange(currentSection.id, e.target.value)}
-              placeholder={`Add any general notes about ${currentSection.title.toLowerCase()}...`}
-              rows={4}
-              maxLength={1000}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-400 resize-none"
-            />
-            <div className="text-xs text-gray-500 text-right mt-1">
-              {(sectionNotes[currentSection.id] || '').length}/1000
+          {currentSection.id !== 'other_observations' && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                Section Notes (optional, max 1000 characters)
+              </label>
+              <textarea
+                value={sectionNotes[currentSection.id] || ''}
+                onChange={(e) => handleSectionNoteChange(currentSection.id, e.target.value)}
+                placeholder={`Add any general notes about ${currentSection.title.toLowerCase()}...`}
+                rows={4}
+                maxLength={1000}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-400 resize-none"
+              />
+              <div className="text-xs text-gray-500 text-right mt-1">
+                {(sectionNotes[currentSection.id] || '').length}/1000
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">

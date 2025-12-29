@@ -234,41 +234,47 @@ export default function EvaluationCategoryCard({
           </div>
 
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Section Notes (optional, max 1000 characters)
-              </label>
-              <textarea
-                value={sectionNote}
-                onChange={(e) => onSectionNoteChange(e.target.value.slice(0, 1000))}
-                placeholder={`Add any general notes about ${category.title.toLowerCase()}...`}
-                maxLength={1000}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary-400 focus:ring-2 focus:ring-primary-100 resize-none"
-                rows={4}
-              />
-              <div className="text-xs text-gray-500 text-right mt-1">
-                {sectionNote.length} / 1000
+            {categoryId !== 'other_observations' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Section Notes (optional, max 1000 characters)
+                </label>
+                <textarea
+                  value={sectionNote}
+                  onChange={(e) => onSectionNoteChange(e.target.value.slice(0, 1000))}
+                  placeholder={`Add any general notes about ${category.title.toLowerCase()}...`}
+                  maxLength={1000}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary-400 focus:ring-2 focus:ring-primary-100 resize-none"
+                  rows={4}
+                />
+                <div className="text-xs text-gray-500 text-right mt-1">
+                  {sectionNote.length} / 1000
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="border-t border-gray-200 pt-6">
-              <PhotoUpload
-                photos={photos}
-                maxPhotos={10}
-                onUpload={handlePhotoUpload}
-                onDelete={handlePhotoDelete}
-                isUploading={isUploadingPhoto}
-              />
-            </div>
+            {categoryId !== 'location' && (
+              <>
+                <div className={categoryId !== 'other_observations' ? 'border-t border-gray-200 pt-6' : ''}>
+                  <PhotoUpload
+                    photos={photos}
+                    maxPhotos={10}
+                    onUpload={handlePhotoUpload}
+                    onDelete={handlePhotoDelete}
+                    isUploading={isUploadingPhoto}
+                  />
+                </div>
 
-            <div className="border-t border-gray-200 pt-6">
-              <VoiceNoteRecorder
-                voiceNotes={voiceNotes}
-                onSave={handleVoiceNoteSave}
-                onDelete={handleVoiceNoteDelete}
-                isSaving={isSavingVoiceNote}
-              />
-            </div>
+                <div className="border-t border-gray-200 pt-6">
+                  <VoiceNoteRecorder
+                    voiceNotes={voiceNotes}
+                    onSave={handleVoiceNoteSave}
+                    onDelete={handleVoiceNoteDelete}
+                    isSaving={isSavingVoiceNote}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
