@@ -22,44 +22,61 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const TESTING_MODE = true;
+
+  const mockUser: User = {
+    id: 'test-user-id-123',
+    email: 'test@example.com',
+    app_metadata: {},
+    user_metadata: { fullName: 'Test User' },
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  } as User;
+
+  if (TESTING_MODE) {
+    console.log('%c🧪 TESTING MODE ENABLED - Authentication Bypassed', 'background: #FFA500; color: white; font-weight: bold; padding: 4px 8px; border-radius: 4px;');
+    console.log('Mock User:', mockUser);
+  }
+
+  const [user, setUser] = useState<User | null>(TESTING_MODE ? mockUser : null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(TESTING_MODE ? false : true);
+  const [isLoaded, setIsLoaded] = useState(TESTING_MODE ? true : false);
 
   useEffect(() => {
+    if (TESTING_MODE) {
+      return;
+    }
+
     let mounted = true;
-  
+
     async function loadUserProfile(userId: string, email: string, metadata?: Record<string, any>) {
       try {
         const profile = await ensureUserProfile(userId, email, metadata);
         if (mounted && profile) setUserProfile(profile);
       } catch (e) {
         console.error("loadUserProfile error:", e);
-        // Don't block app load on profile errors
         if (mounted) setUserProfile(null);
       }
     }
-  
+
     async function initializeAuth() {
       try {
         setIsLoading(true);
-  
+
         const { data, error } = await supabase.auth.getSession();
         if (error) console.error("getSession error:", error);
-  
+
         const currentSession = data?.session ?? null;
-  
+
         if (!mounted) return;
-  
+
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-  
-        // ✅ IMPORTANT: mark auth as loaded NOW (do not wait for profile)
+
         setIsLoaded(true);
-  
-        // Load profile in background (no await)
+
         if (currentSession?.user?.email) {
           loadUserProfile(
             currentSession.user.id,
@@ -76,21 +93,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) setIsLoading(false);
       }
     }
-  
+
     initializeAuth();
-  
+
     const { data } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return;
-  
+
       setSession(newSession);
       setUser(newSession?.user ?? null);
-  
-      // ✅ always loaded after auth state change event
+
       setIsLoaded(true);
       setIsLoading(false);
-  
+
       if (newSession?.user?.email) {
-        // background, no await
         loadUserProfile(
           newSession.user.id,
           newSession.user.email,
@@ -100,12 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserProfile(null);
       }
     });
-  
+
     return () => {
       mounted = false;
       data.subscription.unsubscribe();
     };
-  }, []);
+  }, [TESTING_MODE]);
   
 
   const signUp = async (email: string, metadata?: Record<string, any>) => {
