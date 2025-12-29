@@ -1,17 +1,15 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
-  CheckCircle,
-  XCircle,
   Filter,
   ChevronLeft,
   Printer,
-  ChevronRight,
+  ArrowUp,
 } from 'lucide-react';
-import { Home, InspectionFilterType, HomeInspection } from '../../types';
-import { initializeInspectionData } from '../../data/inspectionChecklist';
+import { Home, InspectionFilterType } from '../../types';
+import { useInspection } from '../../hooks/useInspection';
 import InspectionCategoryCard from './InspectionCategoryCard';
 import InspectionProgressBar from './InspectionProgressBar';
 
@@ -25,12 +23,14 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
     homes.length > 0 ? homes[0].id : null
   );
   const [showHomeSelector, setShowHomeSelector] = useState(false);
-  const [inspection, setInspection] = useState<HomeInspection | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<InspectionFilterType>('all');
-  const [isLoading, setIsLoading] = useState(false);
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [pendingHomeId, setPendingHomeId] = useState<string | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  const { inspection, loading, error, updateRating, updateNotes, updateSectionNotes } =
+    useInspection(selectedHomeId);
 
   const selectedHome = useMemo(
     () => homes.find((h) => h.id === selectedHomeId),
@@ -38,40 +38,22 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
   );
 
   useEffect(() => {
-    if (selectedHomeId) {
-      loadInspection(selectedHomeId);
-    }
-  }, [selectedHomeId]);
-
-  const loadInspection = async (homeId: string) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const mockInspection: HomeInspection = {
-      id: `inspection-${homeId}`,
-      homeId,
-      userId: 'temp-user-demo',
-      categories: initializeInspectionData(),
-      overallProgress: {
-        completed: 0,
-        total: 92,
-        percentage: 0,
-        goodCount: 0,
-        fixCount: 0,
-        replaceCount: 0,
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
     };
 
-    setInspection(mockInspection);
-    setIsLoading(false);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleHomeChange = (homeId: string) => {
     if (homeId === selectedHomeId) return;
 
-    const hasProgress = inspection && inspection.overallProgress.completed > 0;
+    const hasProgress = inspection && inspection.overall_progress.completed > 0;
     if (hasProgress) {
       setPendingHomeId(homeId);
       setShowSwitchModal(true);
@@ -109,103 +91,6 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
   const handleCollapseAll = () => {
     setExpandedCategories(new Set());
   };
-
-  const handleRatingChange = useCallback(
-    (categoryId: string, itemId: string, rating: 'good' | 'fix' | 'replace') => {
-      if (!inspection) return;
-
-      setInspection((prev) => {
-        if (!prev) return prev;
-
-        const updatedCategories = { ...prev.categories };
-        const category = { ...updatedCategories[categoryId] };
-        const items = category.items.map((item) => {
-          if (item.id === itemId) {
-            return {
-              ...item,
-              evaluation: rating,
-              evaluatedAt: new Date().toISOString(),
-            };
-          }
-          return item;
-        });
-
-        const completedCount = items.filter((i) => i.evaluation !== null).length;
-        const goodCount = items.filter((i) => i.evaluation === 'good').length;
-        const fixCount = items.filter((i) => i.evaluation === 'fix').length;
-        const replaceCount = items.filter((i) => i.evaluation === 'replace').length;
-
-        category.items = items;
-        category.completedCount = completedCount;
-        category.goodCount = goodCount;
-        category.fixCount = fixCount;
-        category.replaceCount = replaceCount;
-
-        updatedCategories[categoryId] = category;
-
-        const totalCompleted = Object.values(updatedCategories).reduce(
-          (sum, cat: any) => sum + cat.completedCount,
-          0
-        );
-        const totalGood = Object.values(updatedCategories).reduce(
-          (sum, cat: any) => sum + cat.goodCount,
-          0
-        );
-        const totalFix = Object.values(updatedCategories).reduce(
-          (sum, cat: any) => sum + cat.fixCount,
-          0
-        );
-        const totalReplace = Object.values(updatedCategories).reduce(
-          (sum, cat: any) => sum + cat.replaceCount,
-          0
-        );
-
-        return {
-          ...prev,
-          categories: updatedCategories,
-          overallProgress: {
-            ...prev.overallProgress,
-            completed: totalCompleted,
-            percentage: Math.round((totalCompleted / prev.overallProgress.total) * 100),
-            goodCount: totalGood,
-            fixCount: totalFix,
-            replaceCount: totalReplace,
-          },
-          updatedAt: new Date().toISOString(),
-        };
-      });
-    },
-    [inspection]
-  );
-
-  const handleNotesChange = useCallback(
-    (categoryId: string, itemId: string, notes: string) => {
-      if (!inspection) return;
-
-      setInspection((prev) => {
-        if (!prev) return prev;
-
-        const updatedCategories = { ...prev.categories };
-        const category = { ...updatedCategories[categoryId] };
-        const items = category.items.map((item) => {
-          if (item.id === itemId) {
-            return { ...item, notes };
-          }
-          return item;
-        });
-
-        category.items = items;
-        updatedCategories[categoryId] = category;
-
-        return {
-          ...prev,
-          categories: updatedCategories,
-          updatedAt: new Date().toISOString(),
-        };
-      });
-    },
-    [inspection]
-  );
 
   const filteredCategories = useMemo(() => {
     if (!inspection) return [];
@@ -249,7 +134,7 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
         </p>
         <button
           onClick={onBackToBrowse}
-          className="px-6 py-3 bg-red-400 text-white rounded-lg hover:bg-red-500 transition-colors font-medium"
+          className="px-6 py-3 bg-primary-400 text-white rounded-lg hover:bg-primary-500 transition-colors font-medium"
         >
           Go to Browse
         </button>
@@ -270,7 +155,7 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <span className="font-medium text-gray-900">{selectedHome.address}</span>
-                  <span className="text-gray-500">- {selectedHome.neighborhood}</span>
+                  <span className="text-gray-500">- {selectedHome.city}</span>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
 
@@ -284,11 +169,11 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
                           setShowHomeSelector(false);
                         }}
                         className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                          home.id === selectedHomeId ? 'bg-red-50' : ''
+                          home.id === selectedHomeId ? 'bg-primary-50' : ''
                         }`}
                       >
                         <div className="font-medium text-gray-900">{home.address}</div>
-                        <div className="text-sm text-gray-600">{home.neighborhood}</div>
+                        <div className="text-sm text-gray-600">{home.city}</div>
                       </button>
                     ))}
                   </div>
@@ -316,16 +201,22 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
         </div>
       </div>
 
-      {isLoading ? (
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 text-sm">{error}</p>
+        </div>
+      )}
+
+      {loading ? (
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-red-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-primary-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">Loading inspection...</p>
           </div>
         </div>
       ) : inspection ? (
         <>
-          <InspectionProgressBar progress={inspection.overallProgress} />
+          <InspectionProgressBar progress={inspection.overall_progress} />
 
           <div className="mb-6 flex flex-wrap items-center gap-3 no-print">
             <div className="flex items-center gap-2">
@@ -345,17 +236,17 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
                         ? 'bg-yellow-500 text-white'
                         : filter === 'replace'
                         ? 'bg-red-500 text-white'
-                        : 'bg-red-400 text-white'
+                        : 'bg-primary-400 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {filter === 'not_rated' ? 'Not Rated' : filter.charAt(0).toUpperCase() + filter.slice(1)}
-                  {filter === 'all' && ` (${inspection.overallProgress.total})`}
-                  {filter === 'good' && ` (${inspection.overallProgress.goodCount})`}
-                  {filter === 'fix' && ` (${inspection.overallProgress.fixCount})`}
-                  {filter === 'replace' && ` (${inspection.overallProgress.replaceCount})`}
+                  {filter === 'all' && ` (${inspection.overall_progress.total})`}
+                  {filter === 'good' && ` (${inspection.overall_progress.goodCount})`}
+                  {filter === 'fix' && ` (${inspection.overall_progress.fixCount})`}
+                  {filter === 'replace' && ` (${inspection.overall_progress.replaceCount})`}
                   {filter === 'not_rated' &&
-                    ` (${inspection.overallProgress.total - inspection.overallProgress.completed})`}
+                    ` (${inspection.overall_progress.total - inspection.overall_progress.completed})`}
                 </button>
               )
             )}
@@ -364,7 +255,7 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
           <div className="mb-4 flex items-center gap-3 no-print">
             <button
               onClick={handleExpandAll}
-              className="text-sm text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
+              className="text-sm text-primary-400 hover:text-primary-500 transition-colors flex items-center gap-1"
             >
               <ChevronDown className="w-4 h-4" />
               Expand All
@@ -372,7 +263,7 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
             <span className="text-gray-300">|</span>
             <button
               onClick={handleCollapseAll}
-              className="text-sm text-red-400 hover:text-red-500 transition-colors flex items-center gap-1"
+              className="text-sm text-primary-400 hover:text-primary-500 transition-colors flex items-center gap-1"
             >
               <ChevronUp className="w-4 h-4" />
               Collapse All
@@ -386,11 +277,22 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
                 category={category}
                 isExpanded={expandedCategories.has(category.id)}
                 onToggle={() => handleToggleCategory(category.id)}
-                onRatingChange={handleRatingChange}
-                onNotesChange={handleNotesChange}
+                onRatingChange={updateRating}
+                onNotesChange={updateNotes}
+                onSectionNotesChange={updateSectionNotes}
               />
             ))}
           </div>
+
+          {showBackToTop && (
+            <button
+              onClick={scrollToTop}
+              className="fixed bottom-6 right-6 p-4 bg-primary-400 text-white rounded-full shadow-lg hover:bg-primary-500 transition-all z-50 no-print"
+              aria-label="Back to top"
+            >
+              <ArrowUp className="w-6 h-6" />
+            </button>
+          )}
         </>
       ) : null}
 
@@ -411,7 +313,7 @@ export default function InspectionView({ homes, onBackToBrowse }: InspectionView
               </button>
               <button
                 onClick={confirmHomeSwitch}
-                className="flex-1 px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-500 transition-colors"
+                className="flex-1 px-4 py-2 bg-primary-400 text-white rounded-lg hover:bg-primary-500 transition-colors"
               >
                 Switch Home
               </button>

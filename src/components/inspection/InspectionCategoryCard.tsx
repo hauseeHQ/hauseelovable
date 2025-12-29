@@ -23,6 +23,7 @@ interface InspectionCategoryCardProps {
   onToggle: () => void;
   onRatingChange: (categoryId: string, itemId: string, rating: 'good' | 'fix' | 'replace') => void;
   onNotesChange: (categoryId: string, itemId: string, notes: string) => void;
+  onSectionNotesChange?: (categoryId: string, notes: string) => void;
 }
 
 const iconMap: Record<string, any> = {
@@ -44,9 +45,16 @@ export default function InspectionCategoryCard({
   onToggle,
   onRatingChange,
   onNotesChange,
+  onSectionNotesChange,
 }: InspectionCategoryCardProps) {
-  const [sectionNotes, setSectionNotes] = useState(category.sectionNotes);
+  const [sectionNotes, setSectionNotes] = useState(category.sectionNotes || '');
   const IconComponent = iconMap[category.icon] || Home;
+
+  const handleSectionNotesBlur = () => {
+    if (onSectionNotesChange && sectionNotes !== category.sectionNotes) {
+      onSectionNotesChange(category.id, sectionNotes);
+    }
+  };
 
   const totalItems = category.items.length;
   const progress = totalItems > 0 ? Math.round((category.completedCount / totalItems) * 100) : 0;
@@ -58,8 +66,8 @@ export default function InspectionCategoryCard({
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-4 flex-1">
-          <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
-            <IconComponent className="w-6 h-6 text-red-400" />
+          <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <IconComponent className="w-6 h-6 text-primary-400" />
           </div>
 
           <div className="flex-1 text-left">
@@ -98,7 +106,7 @@ export default function InspectionCategoryCard({
             <div className="w-32 hidden md:block">
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-red-400 transition-all duration-300"
+                  className="h-full bg-primary-400 transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -137,9 +145,10 @@ export default function InspectionCategoryCard({
             <textarea
               value={sectionNotes}
               onChange={(e) => setSectionNotes(e.target.value)}
+              onBlur={handleSectionNotesBlur}
               placeholder="Add any general observations about this category..."
               maxLength={500}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-red-400 focus:ring-2 focus:ring-red-100 resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-primary-400 focus:ring-2 focus:ring-primary-100 resize-none"
               rows={3}
             />
             <div className="text-xs text-gray-500 text-right mt-1">
