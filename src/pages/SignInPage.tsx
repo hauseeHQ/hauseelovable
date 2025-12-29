@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { validateEmail } from '../utils/validation';
 
 export default function SignInPage() {
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, devLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -13,6 +13,7 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const returnTo = location.state?.returnTo || '/plan';
+  const isDev = import.meta.env.DEV;
 
   const handleGoogle = async () => {
     setError('');
@@ -54,6 +55,26 @@ export default function SignInPage() {
     }
   };
 
+  const handleDevLogin = async () => {
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const { error: loginError } = await devLogin();
+
+      if (loginError) {
+        throw loginError;
+      }
+
+      navigate(returnTo);
+    } catch (err: any) {
+      console.error('Dev login error:', err);
+      setError(err.message || 'Dev login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -74,6 +95,24 @@ export default function SignInPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10">
+          {isDev && (
+            <>
+              <button
+                onClick={handleDevLogin}
+                disabled={isLoading}
+                type="button"
+                className="w-full flex items-center justify-center gap-2 bg-green-600 text-white rounded-lg py-3 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+              >
+                <span className="text-sm font-semibold">Quick Login (Dev Only)</span>
+              </button>
+              <div className="flex items-center my-4">
+                <div className="flex-1 h-px bg-gray-300" />
+                <span className="px-3 text-xs uppercase text-gray-500">or continue with</span>
+                <div className="flex-1 h-px bg-gray-300" />
+              </div>
+            </>
+          )}
+
           <button
             onClick={handleGoogle}
             disabled={isLoading}

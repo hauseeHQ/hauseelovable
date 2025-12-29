@@ -17,6 +17,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   refreshUserProfile: () => Promise<void>;
   updateProfile: (updates: { firstName?: string; lastName?: string; phone?: string; homeStage?: string }) => Promise<{ error: Error | null }>;
+  devLogin: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -240,6 +241,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const devLogin = async () => {
+    try {
+      const testEmail = 'test@hausee.dev';
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: testEmail,
+        password: 'test123456',
+      });
+
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: testEmail,
+            password: 'test123456',
+            options: {
+              data: {
+                fullName: 'Test User',
+                homeStage: 'exploring',
+              },
+            },
+          });
+
+          if (signUpError) throw signUpError;
+
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: testEmail,
+            password: 'test123456',
+          });
+
+          if (signInError) throw signInError;
+        } else {
+          throw error;
+        }
+      }
+
+      return { error: null };
+    } catch (error) {
+      console.error('Dev login error:', error);
+      return { error: error as Error };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -255,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithGoogle,
         refreshUserProfile,
         updateProfile,
+        devLogin,
       }}
     >
       {children}

@@ -9,10 +9,11 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const { user, signInWithGoogle, signIn } = useAuth();
+  const { user, signInWithGoogle, signIn, devLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     if (user && isOpen) {
@@ -60,6 +61,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     }
   };
 
+  const handleDevLogin = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const { error } = await devLogin();
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message || 'Dev login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative">
@@ -72,6 +86,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </button>
 
         <h2 className="text-xl font-bold text-gray-900 mb-4">Sign in</h2>
+
+        {isDev && (
+          <>
+            <button
+              onClick={handleDevLogin}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white rounded-lg py-3 hover:bg-green-700 transition-colors disabled:opacity-60 mb-3"
+            >
+              <span className="text-sm font-semibold">Quick Login (Dev Only)</span>
+            </button>
+            <div className="flex items-center my-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="px-3 text-xs uppercase text-gray-400">or continue with</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+          </>
+        )}
 
         <button
           onClick={handleGoogle}
