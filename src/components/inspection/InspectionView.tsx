@@ -6,7 +6,6 @@ import {
   Filter,
   ChevronLeft,
   ArrowUp,
-  Home as HomeIcon,
 } from 'lucide-react';
 import { Home, InspectionFilterType } from '../../types';
 import { useInspection } from '../../hooks/useInspection';
@@ -20,10 +19,9 @@ interface InspectionViewProps {
 }
 
 export default function InspectionView({ homes, onBackToBrowse, initialHomeId }: InspectionViewProps) {
-  const [selectedHomeId, setSelectedHomeId] = useState<string | null>(
+  const [selectedHomeId] = useState<string | null>(
     initialHomeId || (homes.length > 0 ? homes[0].id : null)
   );
-  const [showHomeSelector, setShowHomeSelector] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<InspectionFilterType>('all');
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -47,11 +45,6 @@ export default function InspectionView({ homes, onBackToBrowse, initialHomeId }:
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleHomeChange = (homeId: string) => {
-    setSelectedHomeId(homeId);
-    setShowHomeSelector(false);
   };
 
   const handleToggleCategory = (categoryId: string) => {
@@ -130,93 +123,21 @@ export default function InspectionView({ homes, onBackToBrowse, initialHomeId }:
     <div className="pb-8">
       <div className="mb-6 no-print">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">DIY Home Inspection</h2>
-            {selectedHome ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowHomeSelector(!showHomeSelector)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <HomeIcon className="w-4 h-4 text-gray-500" />
-                  <div className="text-left">
-                    <div className="font-medium text-gray-900">{selectedHome.address}</div>
-                    <div className="text-sm text-gray-500">{selectedHome.city}</div>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
-                </button>
-
-                {showHomeSelector && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowHomeSelector(false)}
-                    />
-                    <div className="absolute top-full left-0 mt-2 w-full md:w-96 bg-white border border-gray-200 rounded-lg shadow-xl z-20 max-h-96 overflow-y-auto">
-                      {homes.map((home) => (
-                        <button
-                          key={home.id}
-                          onClick={() => handleHomeChange(home.id)}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                            home.id === selectedHomeId ? 'bg-primary-50' : ''
-                          }`}
-                        >
-                          <div className="font-medium text-gray-900">{home.address}</div>
-                          <div className="text-sm text-gray-600">{home.city}</div>
-                          {home.id === selectedHomeId && (
-                            <div className="text-xs text-primary-400 mt-1">Currently selected</div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="relative">
-                <button
-                  onClick={() => setShowHomeSelector(!showHomeSelector)}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <HomeIcon className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-700">Select a home to inspect</span>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                </button>
-
-                {showHomeSelector && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowHomeSelector(false)}
-                    />
-                    <div className="absolute top-full left-0 mt-2 w-full md:w-96 bg-white border border-gray-200 rounded-lg shadow-xl z-20 max-h-96 overflow-y-auto">
-                      {homes.map((home) => (
-                        <button
-                          key={home.id}
-                          onClick={() => handleHomeChange(home.id)}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                        >
-                          <div className="font-medium text-gray-900">{home.address}</div>
-                          <div className="text-sm text-gray-600">{home.city}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBackToBrowse}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden md:inline">Back to Browse</span>
-            </button>
-          </div>
+          <button
+            onClick={onBackToBrowse}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to Browse
+          </button>
         </div>
+
+        {selectedHome && (
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">{selectedHome.address}</h1>
+            <p className="text-gray-600">{selectedHome.city}</p>
+          </div>
+        )}
       </div>
 
       {error && (
