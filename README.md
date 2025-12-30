@@ -1,180 +1,269 @@
 # Hausee Navigator
 
-A comprehensive home buying platform that helps users evaluate, compare, and organize their home search journey.
+A home buying platform designed to help users **evaluate, compare, and organize** their home search journey through structured tools and guidance.
 
-## Features
+> ⚠️ **Important – AI / Contributor Notice**
+> This README describes a **mix of implemented features, partially implemented flows, and planned capabilities defined in specs**.
+>
+> Not all features listed below are complete or fully enforced in code.
+> When extending this project (especially using AI tools like Lovable), **verify behavior against the source code and linked specification documents before making changes**.
+
+---
+
+## Product Capabilities (Implemented + In Progress)
 
 ### Evaluate
-- **Home Management**: Add and track multiple homes with detailed information
-- **Rating System**: Rate homes across multiple categories including exterior, interior, location, and practical considerations
-- **Photo Upload**: Document homes with photos organized by evaluation category
-- **Voice Notes**: Record audio notes during home visits
-- **Comparison Tool**: Side-by-side comparison of multiple homes with visual indicators
-- **Detailed Analytics**: View overall ratings and category-specific scores
+
+The Evaluate experience supports structured home evaluation and comparison.
+
+Current capabilities include:
+
+* **Home Management**: Add and track multiple homes with associated details
+* **Rating System**: Rate homes across multiple categories (e.g. exterior, interior, location, practical considerations)
+* **Photo Uploads**: Attach photos to evaluation categories
+* **Voice Notes**: Record audio notes during home visits
+* **Comparison Tool**: Compare multiple homes side-by-side using visual indicators
+* **Ratings Summary**: View overall and category-level scores
+
+> Some evaluation logic and analytics are defined in specs and may be partially implemented.
+
+---
 
 ### Plan
-- **My Dream Home**: Define ideal home preferences, features, and priorities
-- **Self Assessment**: Evaluate home buying readiness across financial, emotional, and practical dimensions
-- **Mortgage Checklist**: Track mortgage application progress and required documents
-- **Budget Planner**: Plan and manage home buying budget with income, expenses, and savings tracking
-- **Down Payment Tracker**: Monitor savings progress toward down payment goals
-- **Moving Todo List**: Organize moving tasks by timeline and category
+
+The Plan area is intended to help users clarify goals and assess readiness for home buying.
+
+Planning modules include:
+
+* **My Dream Home**: Capture preferences, priorities, and ideal features
+* **Self-Assessment**: Assess readiness across financial, emotional, and practical dimensions
+* **Mortgage Checklist**: Track mortgage-related steps and documents
+* **Budget Planning**: Capture income, expenses, savings, and affordability inputs
+* **Down Payment Tracking**: Monitor progress toward savings goals
+* **Moving Tasks**: Organize moving-related to-dos
+
+> These modules vary in completeness and enforcement. Some behavior is defined primarily in documentation.
+
+---
 
 ### Guide
-- **Educational Modules**: Step-by-step guidance through the home buying process
-- **Progress Tracking**: Track completion of guide modules and lessons
+
+The Guide experience is designed to provide educational support throughout the home buying journey.
+
+Capabilities include:
+
+* **Educational Modules**: Step-by-step guidance content
+* **Progress Tracking**: Track completion status of guide content
+
+---
 
 ### Select
-- **Agent Matching**: Connect with real estate agents based on preferences and needs
+
+The Select experience is intended to support **agent selection and matching** based on buyer needs and preferences.
+
+> Matching logic and workflows may be evolving.
+
+---
 
 ### AI Assistant
-- AI-powered assistance for home buying questions and guidance
+
+An AI-assisted experience intended to help users:
+
+* Ask home-buying questions
+* Interpret information
+* Navigate decisions with guidance
+
+> AI behavior and scope are intentionally constrained and evolving.
+
+---
 
 ## Tech Stack
 
 ### Frontend
-- **React 18** with TypeScript
-- **Vite** for build tooling and development server
-- **React Router** for navigation
-- **Tailwind CSS** for styling
-- **Lucide React** for icons
+
+* **React 18** with TypeScript
+* **Vite** for development and build tooling
+* **React Router** for navigation
+* **Tailwind CSS** for styling
+* **Lucide React** for icons
 
 ### Backend
-- **Supabase** for database, authentication, and storage
-- **PostgreSQL** database with Row Level Security
-- **Supabase Edge Functions** for serverless API endpoints
+
+* **Supabase** for database, authentication, and storage
+* **PostgreSQL** with Row Level Security
+* **Supabase Edge Functions** for serverless APIs
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18 or higher
-- npm or yarn package manager
-- Supabase account
+
+* Node.js 18+
+* npm or yarn
+* Supabase account
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd hauseenavigator
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
-Copy `.env.example` to `.env.local` and fill in your Supabase credentials:
+3. Environment setup:
+   Copy `.env.example` to `.env.local` and provide required values:
+
 ```
 VITE_SUPABASE_URL=your-supabase-url
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-4. Run database migrations:
-The database schema is located in `supabase/migrations/`. See `SUPABASE_SETUP.md` for detailed setup instructions.
+4. Database setup:
+   Database migrations live in `supabase/migrations/`.
+   Refer to `SUPABASE_SETUP.md` for details.
 
-5. Start the development server:
+5. Start development:
+
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+App runs at `http://localhost:5173`.
 
-### Build for Production
+### Production build
 
 ```bash
 npm run build
 ```
 
-The built files will be in the `dist/` directory.
+---
 
 ## Project Structure
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── evaluate/       # Evaluate tab components
-│   ├── evaluation/     # Home evaluation modal components
-│   ├── homedetail/     # Home detail page components
-│   ├── inspection/     # Inspection checklist components
-│   ├── plan/           # Planning module components
-│   └── select/         # Agent matching components
-├── contexts/           # React contexts (Auth, etc.)
-├── data/              # Static data and configuration
-├── hooks/             # Custom React hooks
-├── lib/               # Utility libraries and services
-├── pages/             # Main page components
-├── types/             # TypeScript type definitions
-└── utils/             # Helper functions
+├── components/
+│   ├── evaluate/
+│   ├── evaluation/
+│   ├── homedetail/
+│   ├── inspection/
+│   ├── plan/
+│   └── select/
+├── contexts/
+├── data/
+├── hooks/
+├── lib/
+├── pages/
+├── types/
+└── utils/
 
 supabase/
-├── functions/         # Edge Functions
-└── migrations/        # Database migrations
+├── functions/
+└── migrations/
 ```
 
-## Key Features Implementation
+---
+
+## Implementation Notes (Non-Exhaustive)
 
 ### Authentication
-- Email/password authentication via Supabase Auth
-- Protected routes with authentication guards
-- OTP verification for phone authentication
+
+* Uses **Supabase Auth**
+* Email-based authentication is supported
+* Phone / OTP and passwordless flows are evolving and may not be fully enforced
 
 ### Workspaces
-- Multi-user workspace support
-- Workspace invitations and member management
-- Role-based access control
+
+* Supports a multi-user workspace model
+* Invitations, membership, and roles exist with varying enforcement levels
 
 ### Data Persistence
-- All user data stored in Supabase PostgreSQL
-- Row Level Security policies for data isolation
-- Real-time subscriptions for live updates
+
+* User data stored in Supabase PostgreSQL
+* Row Level Security is enabled
+* Some real-time behaviors may be experimental or partial
 
 ### File Storage
-- Photo uploads stored in Supabase Storage
-- Voice note recordings stored in Supabase Storage
-- Organized by user and evaluation ID
 
-## Available Scripts
+* Photos and voice notes are **currently stored using Supabase Storage**
+* Storage structure and organization may change as the product evolves
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run typecheck` - Run TypeScript type checking
+---
+
+## Scripts
+
+* `npm run dev`
+* `npm run build`
+* `npm run preview`
+* `npm run lint`
+* `npm run typecheck`
+
+---
 
 ## Database Schema
 
-The database includes tables for:
-- User profiles and workspaces
-- Homes and evaluations
-- Inspection checklists
-- Planning modules (budget, mortgage, moving)
-- Guide progress tracking
-- Agent requests
+The schema includes tables related to:
 
-See migration files in `supabase/migrations/` for detailed schema.
+* Users and workspaces
+* Homes and evaluations
+* Inspection data
+* Planning modules
+* Guide progress
+* Agent requests
 
-## Documentation
+Refer to `supabase/migrations/` for authoritative definitions.
 
-- `SUPABASE_SETUP.md` - Supabase configuration guide
-- `EVALUATION_SYSTEM_SPEC.md` - Evaluation system specification
-- `EVALUATE_SCHEMA_SUMMARY.md` - Evaluate section schema details
-- `DIY_HOME_INSPECTION_COMPLETE.md` - Inspection feature documentation
-- `RATE_HOME_IMPLEMENTATION.md` - Home rating system documentation
-- `COMPARE_VIEW_IMPLEMENTATION.md` - Comparison feature documentation
+---
 
-## Security
+## Documentation (Source of Truth)
 
-- Row Level Security enabled on all tables
-- Authentication required for sensitive operations
-- Secure file upload with access controls
-- Environment variables for sensitive configuration
+Before making logic changes, review:
+
+* `SUPABASE_SETUP.md`
+* `EVALUATION_SYSTEM_SPEC.md`
+* `EVALUATE_SCHEMA_SUMMARY.md`
+* `DIY_HOME_INSPECTION_COMPLETE.md`
+* `RATE_HOME_IMPLEMENTATION.md`
+* `COMPARE_VIEW_IMPLEMENTATION.md`
+
+---
+
+## Instructions for Lovable / AI Tools
+
+When continuing this project with Lovable or other AI systems:
+
+1. Treat this README as **descriptive, not authoritative**
+2. Read the linked spec documents before modifying logic
+3. Summarize what is:
+
+   * Fully implemented
+   * Partially implemented
+   * Spec-only
+4. Ask for confirmation before:
+
+   * Refactoring
+   * Renaming files or folders
+   * Changing authentication flows
+   * Modifying data models or storage behavior
+
+**Do not infer missing logic.**
+
+---
 
 ## License
 
 Private and proprietary.
 
+---
+
 ## Support
 
-For questions or issues, please contact the development team.
+Contact the development team for questions or issues.
